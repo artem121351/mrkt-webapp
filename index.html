@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MRKT Monitor</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2433;
+    --border: #2a3145;
+    --accent: #6c7cff;
+    --accent-dim: rgba(108,124,255,0.15);
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e8eaf0;
+    --text-dim: #7a8299;
+    --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-icon {
+    width: 36px; height: 36px;
+    background: var(--accent-dim);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .header p { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    gap: 0;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Content ── */
+  .content { padding: 16px 16px; display: none; }
+  .content.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  /* ── Watch items ── */
+  .watch-item {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .watch-item:first-child { border-top: none; }
+  .watch-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .watch-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .watch-dot.off { background: var(--text-dim); }
+  .watch-info { flex: 1; min-width: 0; }
+  .watch-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .watch-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .toggle-btn {
+    width: 44px; height: 26px;
+    border-radius: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .toggle-btn.on { background: var(--accent); }
+  .toggle-btn.off { background: var(--border); }
+  .toggle-btn::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: white;
+    top: 3px;
+    transition: left 0.2s;
+  }
+  .toggle-btn.on::after { left: 21px; }
+  .toggle-btn.off::after { left: 3px; }
+
+  /* ── Settings row ── */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .setting-row:first-child { border-top: none; }
+  .setting-label { font-size: 14px; }
+  .setting-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .setting-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    color: var(--accent);
+    font-family: var(--font);
+  }
+
+  /* ── Number input ── */
+  .num-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .num-input-row label { font-size: 13px; flex: 1; }
+  .num-input {
+    width: 80px;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font);
+    text-align: right;
+  }
+  .num-input:focus { outline: none; border-color: var(--accent); }
+
+  /* ── Floor table ── */
+  .floor-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    gap: 10px;
+  }
+  .floor-item:first-child { border-top: none; }
+  .floor-rank {
+    font-size: 11px;
+    color: var(--text-dim);
+    width: 20px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .floor-name { flex: 1; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .floor-price { font-size: 14px; font-weight: 700; color: var(--text); }
+  .floor-change { font-size: 11px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+  .floor-change.up { background: rgba(239,68,68,0.15); color: var(--red); }
+  .floor-change.down { background: rgba(34,197,94,0.15); color: var(--green); }
+  .floor-change.flat { color: var(--text-dim); }
+
+  /* ── Add watch form ── */
+  .add-form {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font);
+  }
+  .form-input:focus { outline: none; border-color: var(--accent); }
+  .form-row { display: flex; gap: 8px; }
+  .form-row .form-input { flex: 1; }
+  .btn-add {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-add:active { opacity: 0.8; }
+
+  /* ── Deals section ── */
+  .deal-item {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .deal-item:first-child { border-top: none; }
+  .deal-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .deal-name { font-size: 14px; font-weight: 700; }
+  .deal-profit {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(34,197,94,0.15);
+    color: var(--green);
+  }
+  .deal-detail { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+  .deal-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-text { font-size: 14px; }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: flex; justify-content: center; padding: 30px;
+  }
+  .spinner::after {
+    content: '';
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 24px;
+    font-size: 13px;
+    opacity: 0;
+    transition: all 0.25s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Bottom nav ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    display: flex;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 4px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-family: var(--font);
+    transition: color 0.15s;
+  }
+  .nav-btn .icon { font-size: 20px; }
+  .nav-btn.active { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🎁</div>
+  <div>
+    <h1>MRKT Monitor</h1>
+    <p id="header-status">Загрузка...</p>
+  </div>
+</div>
+
+<!-- Content panels -->
+<div class="content active" id="tab-watchlist">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Добавить коллекцию</span>
+    </div>
+    <div class="add-form">
+      <input class="form-input" id="add-name" placeholder="Название коллекции (напр. Lunar Snake)" />
+      <div class="form-row">
+        <input class="form-input" id="add-price" type="number" step="0.1" placeholder="Макс. цена (TON)" />
+        <input class="form-input" id="add-profit" type="number" step="1" value="5" placeholder="Мин. профит %" />
+      </div>
+      <button class="btn-add" onclick="addWatch()">+ Добавить мониторинг</button>
+    </div>
+  </div>
+
+  <div class="card" id="watchlist-card">
+    <div class="card-header">
+      <span class="card-title">Мониторинг</span>
+      <span id="watch-count" style="font-size:12px;color:var(--text-dim)"></span>
+    </div>
+    <div id="watchlist-body"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div class="content" id="tab-deals">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Выгодные лоты</span>
+      <span style="font-size:11px;color:var(--text-dim)">после комиссии 2%</span>
+    </div>
+    <div id="deals-body"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div class="content" id="tab-floors">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Флоры коллекций</span>
+    </div>
+    <div id="floors-body"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div class="content" id="tab-settings">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Основное</span>
+    </div>
+    <div class="num-input-row">
+      <div>
+        <div style="font-size:14px">Интервал сканирования</div>
+        <div style="font-size:11px;color:var(--text-dim)">Минимум 30 сек</div>
+      </div>
+      <input class="num-input" id="s-interval" type="number" min="30" step="10" />
+    </div>
+    <div class="num-input-row">
+      <div>
+        <div style="font-size:14px">Мин. профит %</div>
+        <div style="font-size:11px;color:var(--text-dim)">После комиссии 2%</div>
+      </div>
+      <input class="num-input" id="s-profit" type="number" min="0" step="1" />
+    </div>
+    <div class="num-input-row">
+      <div>
+        <div style="font-size:14px">Порог изм. флора %</div>
+        <div style="font-size:11px;color:var(--text-dim)">Алерт при изменении</div>
+      </div>
+      <input class="num-input" id="s-floor" type="number" min="0.5" step="0.5" />
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">Алерты</span></div>
+    <div class="setting-row" id="row-listings">
+      <div>
+        <div class="setting-label">🆕 Новые листинги</div>
+        <div class="setting-desc">Алерт при появлении нового лота</div>
+      </div>
+      <button class="toggle-btn" id="t-listings" onclick="toggleFilter('listings', this)"></button>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">💡 Выгодные сделки</div>
+        <div class="setting-desc">Алерт при прибыльном лоте</div>
+      </div>
+      <button class="toggle-btn" id="t-deals" onclick="toggleFilter('deals', this)"></button>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">📊 Изменение флора</div>
+        <div class="setting-desc">Алерт при резком изменении флора</div>
+      </div>
+      <button class="toggle-btn" id="t-floor" onclick="toggleFilter('floor', this)"></button>
+    </div>
+  </div>
+
+  <button class="btn-add" onclick="saveSettings()" style="margin-top:4px">💾 Сохранить настройки</button>
+</div>
+
+<!-- Bottom nav -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('watchlist', this)">
+    <span class="icon">👁</span> Слежу
+  </button>
+  <button class="nav-btn" onclick="switchTab('deals', this)">
+    <span class="icon">💡</span> Сделки
+  </button>
+  <button class="nav-btn" onclick="switchTab('floors', this)">
+    <span class="icon">📊</span> Флоры
+  </button>
+  <button class="nav-btn" onclick="switchTab('settings', this)">
+    <span class="icon">⚙️</span> Настройки
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    tg.setHeaderColor('#161a23');
+    tg.setBackgroundColor('#0d0f14');
+  }
+
+  // ── State ──────────────────────────────────────────────
+  let state = {
+    watchlist: {},
+    settings: {},
+    floors: [],
+    deals: [],
+  };
+
+  // ── API calls via Telegram sendData ───────────────────
+  // В реальном деплое эти данные приходят с бэкенда.
+  // Для демо — используем localStorage как заглушку.
+
+  const STORAGE_KEY = 'mrkt_monitor_data';
+
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return null;
+  }
+
+  function saveLocal(data) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+  }
+
+  // ── Init ───────────────────────────────────────────────
+  async function init() {
+    const local = loadLocal();
+    if (local) {
+      state = { ...state, ...local };
+    } else {
+      // Дефолтные настройки
+      state.settings = {
+        scan_interval: 60,
+        min_profit_pct: 5,
+        floor_change_threshold: 5,
+        alert_new_listings: true,
+        alert_deals: true,
+        alert_floor_change: true,
+      };
+    }
+
+    renderWatchlist();
+    renderSettings();
+    renderDeals();
+
+    document.getElementById('header-status').textContent =
+      `${Object.keys(state.watchlist).length} коллекций в мониторинге`;
+  }
+
+  // ── Tab switching ──────────────────────────────────────
+  function switchTab(name, btn) {
+    document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+
+    if (name === 'floors') renderFloors();
+    if (name === 'deals') renderDeals();
+  }
+
+  // ── Watchlist ──────────────────────────────────────────
+  function renderWatchlist() {
+    const body = document.getElementById('watchlist-body');
+    const keys = Object.keys(state.watchlist);
+    document.getElementById('watch-count').textContent = keys.length ? `${keys.length} шт` : '';
+
+    if (!keys.length) {
+      body.innerHTML = `<div class="empty"><div class="empty-icon">👆</div><div class="empty-text">Добавь первую коллекцию выше</div></div>`;
+      return;
+    }
+
+    body.innerHTML = keys.map(name => {
+      const cfg = state.watchlist[name];
+      const on = cfg.enabled !== false;
+      const meta = [
+        cfg.max_price ? `≤${cfg.max_price} TON` : 'любая цена',
+        `профит ≥${cfg.min_profit_pct || 5}%`,
+        cfg.model_name ? `модель: ${cfg.model_name}` : '',
+      ].filter(Boolean).join(' · ');
+      return `
+        <div class="watch-item">
+          <div class="watch-dot ${on ? 'on' : 'off'}"></div>
+          <div class="watch-info">
+            <div class="watch-name">${name}</div>
+            <div class="watch-meta">${meta}</div>
+          </div>
+          <button class="toggle-btn ${on ? 'on' : 'off'}" onclick="toggleWatch('${name}', this)"></button>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleWatch(name, btn) {
+    const cfg = state.watchlist[name];
+    cfg.enabled = !cfg.enabled;
+    btn.className = `toggle-btn ${cfg.enabled ? 'on' : 'off'}`;
+    btn.previousElementSibling.previousElementSibling.className = `watch-dot ${cfg.enabled ? 'on' : 'off'}`;
+    persistAndNotify(`/filter_watch ${name} ${cfg.enabled ? 'on' : 'off'}`);
+    saveLocal(state);
+  }
+
+  function addWatch() {
+    const name = document.getElementById('add-name').value.trim();
+    if (!name) { showToast('⚠️ Введи название коллекции'); return; }
+    const price = parseFloat(document.getElementById('add-price').value) || null;
+    const profit = parseFloat(document.getElementById('add-profit').value) || 5;
+
+    state.watchlist[name] = { max_price: price, min_profit_pct: profit, enabled: true };
+    saveLocal(state);
+    renderWatchlist();
+    document.getElementById('header-status').textContent = `${Object.keys(state.watchlist).length} коллекций в мониторинге`;
+
+    // Отправляем команду боту
+    persistAndNotify(`/watch ${name}${price ? ' ' + price : ''} ${profit}`);
+
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-price').value = '';
+    showToast('✅ Добавлено: ' + name);
+  }
+
+  // ── Floors (mock data — в реальном деплое с бэкенда) ──
+  function renderFloors() {
+    const body = document.getElementById('floors-body');
+    if (!state.floors.length) {
+      body.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Данные загружаются при запуске бота</div></div>`;
+      return;
+    }
+    body.innerHTML = state.floors.map((f, i) => {
+      const changePct = f.change_pct;
+      let changeClass = 'flat', changeStr = '—';
+      if (changePct !== null) {
+        changeClass = changePct > 0 ? 'up' : 'down';
+        changeStr = `${changePct > 0 ? '+' : ''}${changePct.toFixed(1)}%`;
+      }
+      return `
+        <div class="floor-item">
+          <span class="floor-rank">${i+1}</span>
+          <span class="floor-name">${f.title}</span>
+          <span class="floor-price">${f.floor.toFixed(3)} TON</span>
+          <span class="floor-change ${changeClass}">${changeStr}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Deals ──────────────────────────────────────────────
+  function renderDeals() {
+    const body = document.getElementById('deals-body');
+    if (!state.deals.length) {
+      body.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Запусти /scan в боте для поиска выгодных лотов</div></div>`;
+      return;
+    }
+    body.innerHTML = state.deals.map(d => `
+      <div class="deal-item">
+        <div class="deal-top">
+          <div class="deal-name">${d.title} #${d.number}</div>
+          <div class="deal-profit">+${d.profit_pct.toFixed(1)}%</div>
+        </div>
+        <div class="deal-detail">
+          ${d.collection} · ${d.model} (${d.rarity.toFixed(1)}%)<br>
+          Покупка: <b>${d.buy.toFixed(3)} TON</b> → Продать: ~${d.sell_net.toFixed(3)} TON
+        </div>
+        <a class="deal-link" href="https://mrkt.land/telegram/gifts/${d.gift_id}" target="_blank">Открыть на MRKT →</a>
+      </div>`).join('');
+  }
+
+  // ── Settings ───────────────────────────────────────────
+  function renderSettings() {
+    const s = state.settings;
+    document.getElementById('s-interval').value = s.scan_interval || 60;
+    document.getElementById('s-profit').value = s.min_profit_pct || 5;
+    document.getElementById('s-floor').value = s.floor_change_threshold || 5;
+    setToggle('t-listings', s.alert_new_listings !== false);
+    setToggle('t-deals', s.alert_deals !== false);
+    setToggle('t-floor', s.alert_floor_change !== false);
+  }
+
+  function setToggle(id, val) {
+    const btn = document.getElementById(id);
+    btn.className = `toggle-btn ${val ? 'on' : 'off'}`;
+  }
+
+  function toggleFilter(key, btn) {
+    const isOn = btn.classList.contains('on');
+    btn.className = `toggle-btn ${isOn ? 'off' : 'on'}`;
+    const map = { listings: 'alert_new_listings', deals: 'alert_deals', floor: 'alert_floor_change' };
+    state.settings[map[key]] = !isOn;
+  }
+
+  function saveSettings() {
+    const interval = Math.max(30, parseInt(document.getElementById('s-interval').value) || 60);
+    const profit = parseFloat(document.getElementById('s-profit').value) || 5;
+    const floor = parseFloat(document.getElementById('s-floor').value) || 5;
+
+    state.settings.scan_interval = interval;
+    state.settings.min_profit_pct = profit;
+    state.settings.floor_change_threshold = floor;
+    saveLocal(state);
+
+    // Отправляем команды боту
+    persistAndNotify(`/settings interval ${interval}`);
+    persistAndNotify(`/settings profit ${profit}`);
+    persistAndNotify(`/settings floor_alert ${floor}`);
+    persistAndNotify(`/filter listings ${state.settings.alert_new_listings ? 'on' : 'off'}`);
+    persistAndNotify(`/filter deals ${state.settings.alert_deals ? 'on' : 'off'}`);
+    persistAndNotify(`/filter floor ${state.settings.alert_floor_change ? 'on' : 'off'}`);
+
+    showToast('✅ Настройки сохранены');
+  }
+
+  // ── Send command to bot via Telegram ──────────────────
+  function persistAndNotify(cmd) {
+    if (tg && tg.sendData) {
+      try { tg.sendData(JSON.stringify({ cmd })); } catch {}
+    }
+    console.log('[Bot cmd]', cmd);
+  }
+
+  // ── Toast ──────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  init();
+</script>
+</body>
+</html>
