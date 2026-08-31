@@ -2,504 +2,467 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MRKT Monitor</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root {
-  --bg: #0a0c12;
-  --s1: #111420;
-  --s2: #181c2a;
-  --s3: #1f2436;
-  --border: #272d42;
-  --border2: #323a56;
-  --accent: #5b6af0;
-  --accent2: #818cf8;
-  --accent-glow: rgba(91,106,240,.18);
-  --green: #10b981;
-  --green-dim: rgba(16,185,129,.14);
-  --red: #f43f5e;
-  --red-dim: rgba(244,63,94,.14);
-  --yellow: #f59e0b;
-  --yellow-dim: rgba(245,158,11,.14);
-  --text: #dde1f0;
-  --text-mid: #8892a8;
-  --text-dim: #4f5870;
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --r: 14px;
-  --rsm: 9px;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:68px;overscroll-behavior:none}
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2433;
+    --border: #2a3145;
+    --accent: #6c7cff;
+    --accent-dim: rgba(108,124,255,0.15);
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #e8eaf0;
+    --text-dim: #7a8299;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; }
 
-/* Header */
-.hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:11px;position:sticky;top:0;z-index:100}
-.hdr-icon{width:36px;height:36px;background:var(--accent-glow);border:1px solid rgba(91,106,240,.4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.hdr-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
-.hdr-sub{font-size:11px;color:var(--text-dim);margin-top:1px}
-.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.live-badge{display:flex;align-items:center;gap:5px;background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green)}
-.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  /* Header */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px 10px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 10px; }
+  .header-icon { width: 34px; height: 34px; background: var(--accent-dim); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .header h1 { font-size: 16px; font-weight: 700; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .live-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .live-badge.offline { background: rgba(239,68,68,0.15); color: var(--red); border-color: rgba(239,68,68,0.3); }
+  .header-sub { font-size: 11px; color: var(--text-dim); }
 
-/* Tabs */
-.tabs{display:flex;background:var(--s1);border-bottom:1px solid var(--border)}
-.tab{flex:1;padding:10px 4px 8px;text-align:center;font-size:10px;font-weight:700;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.3px;user-select:none}
-.tab.active{color:var(--accent2);border-bottom-color:var(--accent)}
-.tab-ico{font-size:16px;display:block;margin-bottom:2px}
+  /* Tabs */
+  .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; padding: 10px 4px 8px; text-align: center; font-size: 11px; font-weight: 600; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tab .ti { font-size: 16px; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-/* Content */
-.pane{padding:10px;display:none}
-.pane.active{display:block}
+  /* Content */
+  .content { padding: 12px; display: none; }
+  .content.active { display: block; }
 
-/* Card */
-.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
-.card-hdr{padding:11px 14px 9px;display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:10px;font-weight:800;color:var(--text-dim);text-transform:uppercase;letter-spacing:.9px}
-.badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--accent-glow);color:var(--accent2);border:1px solid rgba(91,106,240,.4)}
+  /* Card */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; }
+  .card-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
 
-/* Deal card */
-.deal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;transition:border-color .2s}
-.deal:active{border-color:var(--accent)}
-.deal-top{display:flex;align-items:center;gap:10px;padding:12px 13px 10px}
-.deal-thumb{width:50px;height:50px;border-radius:10px;background:var(--s3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;border:1px solid var(--border2)}
-.deal-thumb img{width:100%;height:100%;object-fit:contain}
-.deal-meta{flex:1;min-width:0}
-.deal-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.deal-coll{font-size:11px;color:var(--text-mid);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.profit-badge{flex-shrink:0;font-size:14px;font-weight:800;padding:5px 10px;border-radius:8px}
-.profit-hi{background:var(--green-dim);border:1px solid rgba(16,185,129,.4);color:var(--green)}
-.profit-mid{background:var(--yellow-dim);border:1px solid rgba(245,158,11,.4);color:var(--yellow)}
-.profit-lo{background:var(--green-dim);border:1px solid rgba(16,185,129,.3);color:var(--green)}
-.deal-model{padding:0 13px 9px;font-size:11px;color:var(--text-mid)}
-.deal-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 13px 10px}
-.pbox{background:var(--s2);border-radius:var(--rsm);padding:7px 8px;text-align:center}
-.plbl{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-.pval{font-size:12px;font-weight:800}
-.pval.buy{color:var(--red)}
-.pval.sell{color:var(--green)}
-.pval.profit{color:var(--accent2)}
-.deal-foot{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;border-top:1px solid var(--border)}
-.deal-floor{font-size:11px;color:var(--text-dim)}
-.deal-link{font-size:12px;font-weight:700;color:var(--accent2);text-decoration:none}
+  /* Toggle */
+  .toggle-btn { width: 44px; height: 26px; border-radius: 13px; border: none; cursor: pointer; transition: all 0.2s; position: relative; flex-shrink: 0; }
+  .toggle-btn.on { background: var(--accent); }
+  .toggle-btn.off { background: var(--border); }
+  .toggle-btn::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: white; top: 3px; transition: left 0.2s; }
+  .toggle-btn.on::after { left: 21px; }
+  .toggle-btn.off::after { left: 3px; }
 
-/* Floor */
-.frow{display:flex;align-items:center;padding:10px 14px;border-top:1px solid var(--border);gap:10px}
-.frow:first-child{border-top:none}
-.frank{font-size:10px;color:var(--text-dim);width:20px;text-align:right;flex-shrink:0;font-weight:700}
-.fname{flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fprice{font-size:13px;font-weight:700}
-.fchange{font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;flex-shrink:0;min-width:44px;text-align:center}
-.fchange.up{background:var(--red-dim);color:var(--red)}
-.fchange.dn{background:var(--green-dim);color:var(--green)}
-.fchange.fl{color:var(--text-dim);background:var(--s2)}
+  /* Deals */
+  .filter-row { display: flex; gap: 6px; padding: 10px 12px; overflow-x: auto; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .filter-chip.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
 
-/* Watch */
-.witem{padding:11px 13px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.witem:first-child{border-top:none}
-.wico{width:36px;height:36px;background:var(--s2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid var(--border)}
-.winfo{flex:1;min-width:0}
-.wname{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wmeta{font-size:11px;color:var(--text-dim);margin-top:2px}
-.wtog{width:40px;height:23px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
-.wtog.on{background:var(--accent)}
-.wtog.off{background:var(--s3)}
-.wtog::after{content:'';position:absolute;width:17px;height:17px;border-radius:50%;background:white;top:3px;transition:left .2s}
-.wtog.on::after{left:20px}
-.wtog.off::after{left:3px}
-.wdel{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:var(--red-dim);color:var(--red);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .deal-item { padding: 12px 14px; border-top: 1px solid var(--border); }
+  .deal-item:first-child { border-top: none; }
+  .deal-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+  .deal-name { font-size: 14px; font-weight: 700; }
+  .deal-profit { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(34,197,94,0.15); color: var(--green); flex-shrink: 0; margin-left: 8px; }
+  .deal-profit.hot { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .deal-detail { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+  .deal-link { display: inline-block; margin-top: 6px; font-size: 12px; color: var(--accent); text-decoration: none; }
 
-/* Form */
-.form{padding:11px 13px;display:flex;flex-direction:column;gap:8px}
-.inp{width:100%;padding:9px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--font);transition:border-color .2s}
-.inp:focus{outline:none;border-color:var(--accent)}
-.inp::placeholder{color:var(--text-dim)}
-.row2{display:flex;gap:8px}
-.row2 .inp{flex:1}
-.btn{width:100%;padding:11px;background:var(--accent);color:white;border:none;border-radius:var(--rsm);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:opacity .15s}
-.btn:active{opacity:.8}
-.btn.ghost{background:var(--s2);border:1px solid var(--border2);color:var(--text-mid)}
+  /* Floors */
+  .floor-item { display: flex; align-items: center; padding: 9px 14px; border-top: 1px solid var(--border); gap: 8px; }
+  .floor-item:first-child { border-top: none; }
+  .floor-rank { font-size: 11px; color: var(--text-dim); width: 18px; text-align: right; flex-shrink: 0; }
+  .floor-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .floor-price { font-size: 13px; font-weight: 700; }
+  .floor-change { font-size: 11px; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
+  .floor-change.up { background: rgba(239,68,68,0.15); color: var(--red); }
+  .floor-change.down { background: rgba(34,197,94,0.15); color: var(--green); }
+  .floor-change.flat { color: var(--text-dim); }
 
-/* Settings */
-.srow{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-top:1px solid var(--border)}
-.srow:first-child{border-top:none}
-.slbl{font-size:14px;font-weight:500}
-.sdesc{font-size:11px;color:var(--text-dim);margin-top:2px}
-.sinp{width:74px;padding:6px 9px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:13px;font-family:var(--font);text-align:right;transition:border-color .2s}
-.sinp:focus{outline:none;border-color:var(--accent)}
-.stog{width:40px;height:23px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
-.stog.on{background:var(--accent)}
-.stog.off{background:var(--s3)}
-.stog::after{content:'';position:absolute;width:17px;height:17px;border-radius:50%;background:white;top:3px;transition:left .2s}
-.stog.on::after{left:20px}
-.stog.off::after{left:3px}
+  /* Watch */
+  .watch-item { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .watch-item:first-child { border-top: none; }
+  .watch-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .watch-dot.on { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .watch-dot.off { background: var(--text-dim); }
+  .watch-info { flex: 1; min-width: 0; }
+  .watch-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .watch-meta { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
 
-/* Filter pills */
-.pills{display:flex;gap:6px;padding:8px 10px 4px;overflow-x:auto;scrollbar-width:none}
-.pills::-webkit-scrollbar{display:none}
-.pill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid var(--border);background:var(--s2);color:var(--text-dim);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
-.pill.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent2)}
+  /* Form */
+  .add-form { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .form-input { width: 100%; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; font-family: var(--font); }
+  .form-input:focus { outline: none; border-color: var(--accent); }
+  .form-row { display: flex; gap: 8px; }
+  .form-row .form-input { flex: 1; }
+  .btn-primary { width: 100%; padding: 11px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; font-family: var(--font); cursor: pointer; transition: opacity 0.2s; }
+  .btn-primary:active { opacity: 0.8; }
 
-/* Stats bar */
-.stats{display:flex;gap:6px;padding:6px 10px 2px}
-.stat{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 9px;text-align:center}
-.stat-val{font-size:16px;font-weight:800;color:var(--accent2)}
-.stat-lbl{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+  /* Settings */
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-top: 1px solid var(--border); }
+  .setting-row:first-child { border-top: none; }
+  .setting-label { font-size: 14px; }
+  .setting-desc { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .num-input { width: 72px; padding: 6px 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; text-align: right; }
+  .num-input:focus { outline: none; border-color: var(--accent); }
 
-/* Top bar */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 4px}
-.topbar-info{font-size:11px;color:var(--text-dim)}
-.refresh{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--s2);color:var(--text-mid);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-.refresh:active{transform:rotate(180deg)}
+  /* Empty */
+  .empty { text-align: center; padding: 36px 20px; color: var(--text-dim); }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-text { font-size: 13px; }
 
-/* Empty */
-.empty{text-align:center;padding:36px 20px;color:var(--text-dim)}
-.empty-ico{font-size:38px;margin-bottom:10px}
-.empty-txt{font-size:13px;line-height:1.6}
+  /* Spinner */
+  .spinner { display: flex; justify-content: center; padding: 28px; }
+  .spinner::after { content: ''; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Spinner */
-.spin{display:flex;justify-content:center;padding:30px}
-.spin::after{content:'';width:26px;height:26px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rot .7s linear infinite}
-@keyframes rot{to{transform:rotate(360deg)}}
+  /* Toast */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 9px 16px; border-radius: 20px; font-size: 13px; opacity: 0; transition: all 0.25s; z-index: 200; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Toast */
-.toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:8px 16px;border-radius:24px;font-size:13px;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* Bottom nav */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; padding-bottom: env(safe-area-inset-bottom, 0); }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 6px; cursor: pointer; border: none; background: none; color: var(--text-dim); font-size: 10px; font-family: var(--font); font-weight: 600; transition: color 0.15s; }
+  .nav-btn .ni { font-size: 18px; }
+  .nav-btn.active { color: var(--accent); }
+
+  .refresh-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text-dim); cursor: pointer; font-size: 14px; }
+  .refresh-btn:active { opacity: 0.7; }
 </style>
 </head>
 <body>
 
-<div class="hdr">
-  <div class="hdr-icon">🎁</div>
+<div class="header">
+  <div class="header-icon">🎁</div>
   <div>
-    <div class="hdr-title">MRKT Monitor</div>
-    <div class="hdr-sub" id="hdr-sub">Подключение...</div>
+    <h1>MRKT Monitor</h1>
+    <div class="header-sub" id="header-sub">Подключение...</div>
   </div>
-  <div class="hdr-right">
-    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  <div class="header-right">
+    <div class="live-badge offline" id="live-badge">● LIVE</div>
   </div>
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('deals',this)"><span class="tab-ico">💡</span>СДЕЛКИ</div>
-  <div class="tab" onclick="showTab('floors',this)"><span class="tab-ico">📊</span>ФЛОРЫ</div>
-  <div class="tab" onclick="showTab('watch',this)"><span class="tab-ico">👁</span>СЛЕЖУ</div>
-  <div class="tab" onclick="showTab('cfg',this)"><span class="tab-ico">⚙️</span>НАСТРОЙКИ</div>
+  <div class="tab active" onclick="switchTab('deals', this)"><span class="ti">💡</span>СДЕЛКИ</div>
+  <div class="tab" onclick="switchTab('floors', this)"><span class="ti">📊</span>ФЛОРЫ</div>
+  <div class="tab" onclick="switchTab('watch', this)"><span class="ti">👁</span>СЛЕЖУ</div>
+  <div class="tab" onclick="switchTab('settings', this)"><span class="ti">⚙️</span>НАСТРОЙКИ</div>
 </div>
 
-<!-- DEALS -->
-<div class="pane active" id="pane-deals">
-  <div class="pills">
-    <div class="pill active" onclick="setF(0,this)">Все</div>
-    <div class="pill" onclick="setF(5,this)">≥5%</div>
-    <div class="pill" onclick="setF(10,this)">≥10%</div>
-    <div class="pill" onclick="setF(15,this)">≥15%</div>
-    <div class="pill" onclick="setF(20,this)">≥20%</div>
-    <div class="pill" onclick="setF(30,this)">≥30%</div>
+<!-- Deals -->
+<div class="content active" id="tab-deals">
+  <div class="filter-row" id="deal-filters">
+    <div class="filter-chip active" onclick="setDealFilter(0, this)">Все</div>
+    <div class="filter-chip" onclick="setDealFilter(5, this)">≥5%</div>
+    <div class="filter-chip" onclick="setDealFilter(10, this)">≥10%</div>
+    <div class="filter-chip" onclick="setDealFilter(15, this)">≥15%</div>
+    <div class="filter-chip" onclick="setDealFilter(20, this)">≥20%</div>
+    <div class="filter-chip" onclick="setDealFilter(30, this)">≥30%</div>
   </div>
-  <div class="stats" id="deal-stats" style="display:none">
-    <div class="stat"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Лотов</div></div>
-    <div class="stat"><div class="stat-val" id="s-best">—</div><div class="stat-lbl">Лучший %</div></div>
-    <div class="stat"><div class="stat-val" id="s-avg">—</div><div class="stat-lbl">Средний %</div></div>
-  </div>
-  <div class="topbar">
-    <span class="topbar-info" id="deals-info"></span>
-    <button class="refresh" onclick="loadDeals()" title="Обновить">↻</button>
-  </div>
-  <div id="deals-body"><div class="spin"></div></div>
-</div>
-
-<!-- FLOORS -->
-<div class="pane" id="pane-floors">
-  <div class="topbar">
-    <span class="topbar-info">Топ 60 по объёму торгов</span>
-    <button class="refresh" onclick="loadFloors()">↻</button>
-  </div>
-  <div class="card"><div id="floors-body"><div class="spin"></div></div></div>
-</div>
-
-<!-- WATCH -->
-<div class="pane" id="pane-watch">
   <div class="card">
-    <div class="card-hdr"><span class="card-title">Добавить коллекцию</span></div>
-    <div class="form">
-      <input class="inp" id="w-name" placeholder="Название (напр. Lunar Snake)" />
-      <div class="row2">
-        <input class="inp" id="w-price" type="number" step="0.1" placeholder="Макс. цена TON" />
-        <input class="inp" id="w-profit" type="number" step="1" value="5" placeholder="Мин. % профит" />
+    <div class="card-header">
+      <span class="card-title" id="deals-title">Выгодные лоты</span>
+      <button class="refresh-btn" onclick="loadDeals()">↻</button>
+    </div>
+    <div id="deals-body"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- Floors -->
+<div class="content" id="tab-floors">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Флоры коллекций</span>
+      <button class="refresh-btn" onclick="loadFloors()">↻</button>
+    </div>
+    <div id="floors-body"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- Watch -->
+<div class="content" id="tab-watch">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Добавить коллекцию</span></div>
+    <div class="add-form">
+      <input class="form-input" id="add-name" placeholder="Название (напр. Lunar Snake)" />
+      <div class="form-row">
+        <input class="form-input" id="add-price" type="number" step="0.1" placeholder="Макс. цена TON" />
+        <input class="form-input" id="add-profit" type="number" step="1" value="5" placeholder="Мин. профит %" />
       </div>
-      <button class="btn" onclick="addWatch()">+ Добавить в мониторинг</button>
+      <button class="btn-primary" onclick="addWatch()">+ Добавить в мониторинг</button>
     </div>
   </div>
   <div class="card">
-    <div class="card-hdr">
+    <div class="card-header">
       <span class="card-title">Мониторинг</span>
-      <span class="badge" id="w-cnt" style="display:none"></span>
+      <span id="watch-count" style="font-size:11px;color:var(--text-dim)"></span>
     </div>
-    <div id="watch-body"><div class="spin"></div></div>
+    <div id="watch-body"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- SETTINGS -->
-<div class="pane" id="pane-cfg">
+<!-- Settings -->
+<div class="content" id="tab-settings">
   <div class="card">
-    <div class="card-hdr"><span class="card-title">Сканирование</span></div>
-    <div class="srow">
-      <div><div class="slbl">Интервал (сек)</div><div class="sdesc">Минимум 30 сек</div></div>
-      <input class="sinp" id="c-interval" type="number" min="30" step="10">
+    <div class="card-header"><span class="card-title">Сканирование</span></div>
+    <div class="setting-row">
+      <div><div class="setting-label">Интервал (сек)</div><div class="setting-desc">Минимум 30 сек</div></div>
+      <input class="num-input" id="s-interval" type="number" min="30" step="10" value="60" />
     </div>
-    <div class="srow">
-      <div><div class="slbl">Мин. профит %</div><div class="sdesc">После комиссии 2%</div></div>
-      <input class="sinp" id="c-profit" type="number" min="0" step="1">
+    <div class="setting-row">
+      <div><div class="setting-label">Мин. профит %</div><div class="setting-desc">После комиссии 2%</div></div>
+      <input class="num-input" id="s-profit" type="number" min="0" step="1" value="0" />
     </div>
-    <div class="srow">
-      <div><div class="slbl">Порог флора %</div><div class="sdesc">Алерт при изменении</div></div>
-      <input class="sinp" id="c-floor" type="number" min="0.5" step="0.5">
+    <div class="setting-row">
+      <div><div class="setting-label">Порог флора %</div><div class="setting-desc">Алерт при изменении</div></div>
+      <input class="num-input" id="s-floor" type="number" min="0.5" step="0.5" value="5" />
     </div>
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title">Алерты</span></div>
-    <div class="srow">
-      <div><div class="slbl">💡 Выгодные сделки</div><div class="sdesc">Алерт при профитном лоте</div></div>
-      <button class="stog" id="t-deals" onclick="togS(this)"></button>
+    <div class="card-header"><span class="card-title">Алерты</span></div>
+    <div class="setting-row">
+      <div><div class="setting-label">💡 Выгодные сделки</div><div class="setting-desc">Алерт при профитном лоте</div></div>
+      <button class="toggle-btn on" id="t-deals" onclick="this.className='toggle-btn '+(this.classList.contains('on')?'off':'on')"></button>
     </div>
-    <div class="srow">
-      <div><div class="slbl">📊 Изменение флора</div><div class="sdesc">Алерт при резком изменении</div></div>
-      <button class="stog" id="t-floor" onclick="togS(this)"></button>
+    <div class="setting-row">
+      <div><div class="setting-label">📊 Изменение флора</div><div class="setting-desc">Алерт при резком изменении</div></div>
+      <button class="toggle-btn on" id="t-floor" onclick="this.className='toggle-btn '+(this.classList.contains('on')?'off':'on')"></button>
     </div>
   </div>
-  <button class="btn" onclick="saveSettings()" style="margin-top:4px">💾 Сохранить настройки</button>
-  <div id="cfg-meta" style="margin-top:10px;font-size:11px;color:var(--text-dim);text-align:center;line-height:1.8"></div>
+  <button class="btn-primary" onclick="saveSettings()" style="margin-top:4px">💾 Сохранить настройки</button>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('deals', this)"><span class="ni">💡</span>Сделки</button>
+  <button class="nav-btn" onclick="switchTab('floors', this)"><span class="ni">📊</span>Флоры</button>
+  <button class="nav-btn" onclick="switchTab('watch', this)"><span class="ni">👁</span>Слежу</button>
+  <button class="nav-btn" onclick="switchTab('settings', this)"><span class="ni">⚙️</span>Настройки</button>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const tg = window.Telegram?.WebApp;
-if(tg){tg.ready();tg.expand();tg.setHeaderColor?.('#111420');tg.setBackgroundColor?.('#0a0c12');}
+  const API = 'http://88.96.51.16:8080';
+  let dealFilter = 0;
+  let allDeals = [];
 
-const API = '';
-let deals=[], floors=[], watchlist={}, settings={}, filterMin=0;
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
 
-async function api(path, opts={}){
-  try{
-    const r = await fetch(API+path,{...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}});
-    return await r.json();
-  }catch(e){console.error(path,e);return null;}
-}
-
-// ── Init ────────────────────────────────────────────────
-async function init(){
-  await Promise.all([loadState(), loadDeals(), loadFloors()]);
-}
-
-async function loadState(){
-  const d = await api('/api/state');
-  if(!d) return;
-  watchlist = d.watchlist||{};
-  settings  = d.settings||{};
-  renderWatch();
-  renderSettings();
-  const n = Object.keys(watchlist).length;
-  document.getElementById('hdr-sub').textContent = n ? `${n} коллекций · мониторинг активен` : 'Нет активных коллекций';
-  if(d.meta){
-    const ls = d.meta.last_scan ? new Date(d.meta.last_scan*1000).toLocaleTimeString('ru') : '—';
-    const dc = d.meta.deals_count ?? '—';
-    const cc = d.meta.collections_count ?? '—';
-    document.getElementById('cfg-meta').innerHTML =
-      `Последний скан: ${ls}<br>Коллекций: ${cc} · Выгодных лотов: ${dc}`;
-  }
-}
-
-// ── Deals ───────────────────────────────────────────────
-async function loadDeals(){
-  document.getElementById('deals-body').innerHTML='<div class="spin"></div>';
-  const d = await api('/api/deals');
-  deals = d||[];
-  renderDeals();
-}
-
-function setF(val,el){
-  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  filterMin=val;
-  renderDeals();
-}
-
-function renderDeals(){
-  const body = document.getElementById('deals-body');
-  const filtered = deals.filter(d=>d.profit_pct>=filterMin);
-
-  // Stats
-  if(filtered.length){
-    document.getElementById('deal-stats').style.display='flex';
-    document.getElementById('s-total').textContent=filtered.length;
-    document.getElementById('s-best').textContent='+'+filtered[0].profit_pct.toFixed(1)+'%';
-    const avg = filtered.reduce((a,d)=>a+d.profit_pct,0)/filtered.length;
-    document.getElementById('s-avg').textContent='+'+avg.toFixed(1)+'%';
-  } else {
-    document.getElementById('deal-stats').style.display='none';
+  // ── API ────────────────────────────────────────────────
+  async function apiFetch(path, opts = {}) {
+    const r = await fetch(API + path, { ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
   }
 
-  document.getElementById('deals-info').textContent = filtered.length ? `${filtered.length} лотов найдено` : '';
+  // ── Init ───────────────────────────────────────────────
+  async function init() {
+    try {
+      const data = await apiFetch('/api/state');
+      document.getElementById('live-badge').className = 'live-badge';
+      const meta = data.meta || {};
+      const count = meta.deals_count ?? '—';
+      document.getElementById('header-sub').textContent = `${count} выгодных лотов`;
 
-  if(!filtered.length){
-    body.innerHTML=`<div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">Выгодных лотов не найдено.<br>Бот сканирует автоматически.</div></div>`;
-    return;
+      // Заполняем настройки
+      const s = data.settings || {};
+      const gf = s.global_filters || {};
+      document.getElementById('s-interval').value = s.scan_interval || 60;
+      document.getElementById('s-profit').value = gf.min_profit_pct ?? 0;
+      document.getElementById('s-floor').value = gf.floor_change_threshold ?? 5;
+      setToggle('t-deals', gf.alert_deals !== false);
+      setToggle('t-floor', gf.alert_floor_change !== false);
+
+      // Вотчлист
+      renderWatch(data.watchlist || {});
+    } catch (e) {
+      document.getElementById('live-badge').className = 'live-badge offline';
+      document.getElementById('header-sub').textContent = 'Нет связи с сервером';
+    }
+    loadDeals();
   }
 
-  body.innerHTML = filtered.map(d=>{
-    const pCls = d.profit_pct>=20?'profit-hi':d.profit_pct>=10?'profit-mid':'profit-lo';
-    const giftUrl = `https://mrkt.land/telegram/gifts/${d.gift_id}`;
-    const imgUrl  = `https://nft.fragment.com/gift/${d.gift_id.toLowerCase()}.webp`;
-    return `<div class="deal">
-      <div class="deal-top">
-        <div class="deal-thumb"><img src="${imgUrl}" onerror="this.parentElement.innerHTML='🎁'" loading="lazy"></div>
-        <div class="deal-meta">
-          <div class="deal-name">${d.title} <span style="color:var(--text-dim);font-weight:400">#${d.number}</span></div>
-          <div class="deal-coll">${d.collection}</div>
+  // ── Deals ──────────────────────────────────────────────
+  async function loadDeals() {
+    document.getElementById('deals-body').innerHTML = '<div class="spinner"></div>';
+    try {
+      allDeals = await apiFetch('/api/deals');
+      renderDeals();
+    } catch (e) {
+      document.getElementById('deals-body').innerHTML =
+        '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Нет связи с сервером</div></div>';
+    }
+  }
+
+  function setDealFilter(pct, el) {
+    dealFilter = pct;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderDeals();
+  }
+
+  function renderDeals() {
+    const filtered = allDeals.filter(d => d.profit_pct >= dealFilter);
+    document.getElementById('deals-title').textContent =
+      `Выгодные лоты (${filtered.length})`;
+    if (!filtered.length) {
+      document.getElementById('deals-body').innerHTML =
+        '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Выгодных лотов не найдено.<br>Бот сканирует автоматически.</div></div>';
+      return;
+    }
+    document.getElementById('deals-body').innerHTML = filtered.map(d => {
+      const isHot = d.profit_pct >= 20;
+      return `<div class="deal-item">
+        <div class="deal-top">
+          <div class="deal-name">${d.title} #${d.number}</div>
+          <div class="deal-profit ${isHot ? 'hot' : ''}">+${d.profit_pct.toFixed(1)}%</div>
         </div>
-        <div class="profit-badge ${pCls}">+${d.profit_pct.toFixed(1)}%</div>
-      </div>
-      <div class="deal-model">💎 ${d.model||'—'} · редкость ${(d.rarity||0).toFixed(1)}%</div>
-      <div class="deal-prices">
-        <div class="pbox"><div class="plbl">Купить</div><div class="pval buy">${d.buy.toFixed(3)}</div></div>
-        <div class="pbox"><div class="plbl">Продать</div><div class="pval sell">${d.sell_net.toFixed(3)}</div></div>
-        <div class="pbox"><div class="plbl">Профит</div><div class="pval profit">+${d.profit_ton.toFixed(3)}</div></div>
-      </div>
-      <div class="deal-foot">
-        <span class="deal-floor">Флор: ${d.floor.toFixed(3)} TON</span>
-        <a class="deal-link" href="${giftUrl}" target="_blank">Открыть →</a>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── Floors ──────────────────────────────────────────────
-async function loadFloors(){
-  document.getElementById('floors-body').innerHTML='<div class="spin"></div>';
-  const d = await api('/api/floors');
-  floors = d||[];
-  renderFloors();
-}
-
-function renderFloors(){
-  const body = document.getElementById('floors-body');
-  if(!floors.length){
-    body.innerHTML=`<div class="empty"><div class="empty-ico">📊</div><div class="empty-txt">Данные появятся после первого скана</div></div>`;
-    return;
+        <div class="deal-detail">
+          ${d.collection} · ${d.model} (${(d.rarity||0).toFixed(1)}%)<br>
+          Купить: <b>${d.buy.toFixed(3)} TON</b> · Флор: ${d.floor.toFixed(3)} · Продать: ~${d.sell_net.toFixed(3)} TON<br>
+          <b>Профит: +${d.profit_ton.toFixed(3)} TON</b>
+        </div>
+        <a class="deal-link" href="https://mrkt.land/telegram/gifts/${d.gift_id}" target="_blank">Открыть на MRKT →</a>
+      </div>`;
+    }).join('');
   }
-  body.innerHTML = floors.map((f,i)=>{
-    const cp=f.change_pct;
-    const cls=cp===null?'fl':cp>0?'up':'dn';
-    const str=cp===null?'—':`${cp>0?'+':''}${cp.toFixed(1)}%`;
-    return `<div class="frow">
-      <span class="frank">${i+1}</span>
-      <span class="fname">${f.title}</span>
-      <span class="fprice">${f.floor.toFixed(3)}</span>
-      <span class="fchange ${cls}">${str}</span>
-    </div>`;
-  }).join('');
-}
 
-// ── Watch ───────────────────────────────────────────────
-function renderWatch(){
-  const body=document.getElementById('watch-body');
-  const keys=Object.keys(watchlist);
-  const cnt=document.getElementById('w-cnt');
-  cnt.textContent=keys.length;
-  cnt.style.display=keys.length?'':'none';
-  if(!keys.length){
-    body.innerHTML=`<div class="empty"><div class="empty-ico">👆</div><div class="empty-txt">Добавь первую коллекцию выше</div></div>`;
-    return;
+  // ── Floors ─────────────────────────────────────────────
+  async function loadFloors() {
+    document.getElementById('floors-body').innerHTML = '<div class="spinner"></div>';
+    try {
+      const floors = await apiFetch('/api/floors');
+      if (!floors.length) {
+        document.getElementById('floors-body').innerHTML =
+          '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Данные появятся после первого скана</div></div>';
+        return;
+      }
+      document.getElementById('floors-body').innerHTML = floors.map((f, i) => {
+        const cp = f.change_pct;
+        let cc = 'flat', cs = '—';
+        if (cp !== null && cp !== undefined) {
+          cc = cp > 0 ? 'up' : 'down';
+          cs = `${cp > 0 ? '+' : ''}${cp.toFixed(1)}%`;
+        }
+        return `<div class="floor-item">
+          <span class="floor-rank">${i+1}</span>
+          <span class="floor-name">${f.title}</span>
+          <span class="floor-price">${f.floor.toFixed(3)} TON</span>
+          <span class="floor-change ${cc}">${cs}</span>
+        </div>`;
+      }).join('');
+    } catch (e) {
+      document.getElementById('floors-body').innerHTML =
+        '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Нет связи с сервером</div></div>';
+    }
   }
-  body.innerHTML=keys.map(name=>{
-    const cfg=watchlist[name];
-    const on=cfg.enabled!==false;
-    const meta=[cfg.max_price?`≤${cfg.max_price} TON`:'любая цена',`профит ≥${cfg.min_profit_pct||5}%`].join(' · ');
-    return `<div class="witem">
-      <div class="wico">🎁</div>
-      <div class="winfo"><div class="wname">${name}</div><div class="wmeta">${meta}</div></div>
-      <button class="wtog ${on?'on':'off'}" onclick="togWatch('${name}',this)"></button>
-      <button class="wdel" onclick="delWatch('${name}')">✕</button>
-    </div>`;
-  }).join('');
-}
 
-async function togWatch(name,btn){
-  const cfg=watchlist[name];
-  cfg.enabled=!cfg.enabled;
-  btn.className=`wtog ${cfg.enabled?'on':'off'}`;
-  await api(`/api/watch/${encodeURIComponent(name)}/toggle?enabled=${cfg.enabled}`,{method:'POST'});
-}
-
-async function delWatch(name){
-  if(!confirm(`Удалить "${name}" из мониторинга?`)) return;
-  delete watchlist[name];
-  renderWatch();
-  await api(`/api/watch/${encodeURIComponent(name)}`,{method:'DELETE'});
-  showToast('🗑 Удалено: '+name);
-}
-
-async function addWatch(){
-  const name=document.getElementById('w-name').value.trim();
-  if(!name){showToast('⚠️ Введи название');return;}
-  const price=parseFloat(document.getElementById('w-price').value)||null;
-  const profit=parseFloat(document.getElementById('w-profit').value)||5;
-  const r=await api('/api/watch',{method:'POST',body:JSON.stringify({collection:name,max_price:price,min_profit_pct:profit})});
-  if(r?.ok){
-    await loadState();
-    document.getElementById('w-name').value='';
-    document.getElementById('w-price').value='';
-    showToast('✅ Добавлено: '+name);
-  } else {
-    showToast('❌ Ошибка сохранения');
+  // ── Watch ──────────────────────────────────────────────
+  async function loadWatch() {
+    try {
+      const data = await apiFetch('/api/state');
+      renderWatch(data.watchlist || {});
+    } catch {}
   }
-}
 
-// ── Settings ────────────────────────────────────────────
-function renderSettings(){
-  const gf=settings.global_filters||{};
-  document.getElementById('c-interval').value=settings.scan_interval||60;
-  document.getElementById('c-profit').value=gf.min_profit_pct||5;
-  document.getElementById('c-floor').value=gf.floor_change_threshold||5;
-  setTog('t-deals', gf.alert_deals!==false);
-  setTog('t-floor', gf.alert_floor_change!==false);
-}
+  function renderWatch(watchlist) {
+    const keys = Object.keys(watchlist);
+    document.getElementById('watch-count').textContent = keys.length ? `${keys.length} шт` : '';
+    if (!keys.length) {
+      document.getElementById('watch-body').innerHTML =
+        '<div class="empty"><div class="empty-icon">👆</div><div class="empty-text">Добавь первую коллекцию выше</div></div>';
+      return;
+    }
+    document.getElementById('watch-body').innerHTML = keys.map(name => {
+      const cfg = watchlist[name];
+      const on = cfg.enabled !== false;
+      const meta = [
+        cfg.max_price ? `≤${cfg.max_price} TON` : 'любая цена',
+        `профит ≥${cfg.min_profit_pct || 0}%`,
+      ].join(' · ');
+      return `<div class="watch-item">
+        <div class="watch-dot ${on ? 'on' : 'off'}"></div>
+        <div class="watch-info">
+          <div class="watch-name">${name}</div>
+          <div class="watch-meta">${meta}</div>
+        </div>
+        <button class="toggle-btn ${on ? 'on' : 'off'}" onclick="toggleWatch('${name}', this)"></button>
+      </div>`;
+    }).join('');
+  }
 
-function setTog(id,val){document.getElementById(id).className=`stog ${val?'on':'off'}`;}
-function togS(btn){btn.className=`stog ${btn.classList.contains('on')?'off':'on'}`;}
+  async function addWatch() {
+    const name = document.getElementById('add-name').value.trim();
+    if (!name) { showToast('⚠️ Введи название коллекции'); return; }
+    const price = parseFloat(document.getElementById('add-price').value) || null;
+    const profit = parseFloat(document.getElementById('add-profit').value) || 0;
+    try {
+      await apiFetch('/api/watch', { method: 'POST', body: JSON.stringify({ collection: name, max_price: price, min_profit_pct: profit }) });
+      document.getElementById('add-name').value = '';
+      document.getElementById('add-price').value = '';
+      showToast('✅ Добавлено: ' + name);
+      loadWatch();
+    } catch { showToast('❌ Ошибка сохранения'); }
+  }
 
-async function saveSettings(){
-  const payload={
-    scan_interval:Math.max(30,parseInt(document.getElementById('c-interval').value)||60),
-    min_profit_pct:parseFloat(document.getElementById('c-profit').value)||5,
-    floor_change_threshold:parseFloat(document.getElementById('c-floor').value)||5,
-    alert_deals:document.getElementById('t-deals').classList.contains('on'),
-    alert_floor_change:document.getElementById('t-floor').classList.contains('on'),
-  };
-  const r=await api('/api/settings',{method:'POST',body:JSON.stringify(payload)});
-  if(r?.ok){showToast('✅ Настройки сохранены');}
-  else{showToast('❌ Ошибка сохранения');}
-}
+  async function toggleWatch(name, btn) {
+    const isOn = btn.classList.contains('on');
+    btn.className = `toggle-btn ${isOn ? 'off' : 'on'}`;
+    try {
+      await apiFetch(`/api/watch/${encodeURIComponent(name)}/toggle?enabled=${!isOn}`, { method: 'POST' });
+    } catch { showToast('❌ Ошибка'); }
+  }
 
-// ── Utils ───────────────────────────────────────────────
-function showTab(name,el){
-  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('pane-'+name).classList.add('active');
-  el.classList.add('active');
-  if(name==='deals' && !deals.length) loadDeals();
-  if(name==='floors' && !floors.length) loadFloors();
-}
+  // ── Settings ───────────────────────────────────────────
+  async function saveSettings() {
+    const body = {
+      scan_interval: Math.max(30, parseInt(document.getElementById('s-interval').value) || 60),
+      min_profit_pct: parseFloat(document.getElementById('s-profit').value) || 0,
+      floor_change_threshold: parseFloat(document.getElementById('s-floor').value) || 5,
+      alert_deals: document.getElementById('t-deals').classList.contains('on'),
+      alert_floor_change: document.getElementById('t-floor').classList.contains('on'),
+    };
+    try {
+      await apiFetch('/api/settings', { method: 'POST', body: JSON.stringify(body) });
+      showToast('✅ Настройки сохранены');
+    } catch { showToast('❌ Ошибка сохранения'); }
+  }
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2200);
-}
+  // ── Tabs ───────────────────────────────────────────────
+  function switchTab(name, btn) {
+    document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab, .nav-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    // Подсвечиваем и вкладку и кнопку низа
+    if (btn) btn.classList.add('active');
+    const idx = ['deals','floors','watch','settings'].indexOf(name);
+    document.querySelectorAll('.tab')[idx]?.classList.add('active');
+    document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
 
-init();
+    if (name === 'floors') loadFloors();
+    if (name === 'watch') loadWatch();
+  }
+
+  // ── Helpers ────────────────────────────────────────────
+  function setToggle(id, val) {
+    document.getElementById(id).className = `toggle-btn ${val ? 'on' : 'off'}`;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  init();
+  // Автообновление сделок каждые 60 сек
+  setInterval(loadDeals, 60000);
 </script>
 </body>
 </html>
