@@ -278,7 +278,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 const tg = window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();tg.setHeaderColor?.('#111420');tg.setBackgroundColor?.('#0a0c12');}
 
-const API = 'http://88.96.51.16:8080';
+const API = '';
 let deals=[], floors=[], watchlist={}, settings={}, filterMin=0;
 
 async function api(path, opts={}){
